@@ -93,6 +93,12 @@ def main():
 
                  print_("Open Task Earn")
                  ably.list_task_partner(query)
+            
+            if config.get('auto_convert'):
+                if points > 10000:
+                    ably.exchange(query=query, amount=points)
+                else:
+                     print_("Not enough points to exchange")
 
             
         end_time = time.time()

@@ -11,17 +11,15 @@ import requests
 class Ably:
     def __init__(self):
         self.headers = {
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Encoding': 'gzip, deflate, br, zstd',
-            'Accept-Language': 'en,en-GB;q=0.9,en-US;q=0.8',
-            'Cache-Control': 'no-cache',
+            # 'Accept': 'application/json, text/plain, */*',
+            # 'Accept-Encoding': 'gzip, deflate, br, zstd',
+            # 'Accept-Language': 'en,en-GB;q=0.9,en-US;q=0.8',
             'Referer': 'https://app.ablybot.com/',
             'Sec-Ch-Ua': '"Android WebView";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
             'sec-ch-ua-platform':'"Android"',
             'Sec-Fetch-Dest': 'empty',
             'Sec-Fetch-Mode': 'cors',
             'Sec-Fetch-Site': 'same-site',
-            'User-Agent':'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.39 Mobile Safari/537.36 Telegram-Android/11.4.2 (Xiaomi MI 8 Lite; Android 10; SDK 29; AVERAGE)',
             'X-Requested-With': 'tw.nekomimi.nekogram'
         }
     
@@ -41,7 +39,6 @@ class Ably:
                 response = requests.put(url, headers=headers, json=json)
             else:
                 raise ValueError("Invalid method.")
-            
             if response.status_code >= 500:
                 if retry_count >= 4:
                     self.print_(f"Status Code: {response.status_code} | {response.text}")
@@ -67,9 +64,6 @@ class Ably:
             ok = res.get('ok', False)
             if ok:
                 user = res.get('user',{})
-                daily_points = user.get('daily_points')
-                if daily_points == 0:
-                    print()
                 return user
     
     def checkin(self, query):
@@ -272,5 +266,54 @@ class Ably:
             if ok:
                 total_points = res.get('total_points', 0)
                 self.print_(f"Daily Reward, Total Point : {total_points}")
+    
+    def airdrop_config(self, query):
+        url = 'https://app.ablybot.com/api/airdrop/config'
+        headers = {
+            **self.headers,
+            'Authorization': f'Bearer {query}',
+        }
+        response = self.make_request('get', url=url, headers=headers)
+        if response is not None:
+            res = response.json()
+            ok = res.get('ok', False)
+            if ok:
+                ads_seen = res.get('ads_seen', 0)
+                ads_total = res.get('ads_total', 0)
+                totals = ads_total - ads_seen
+                if totals > 0:
+                    for i in range(totals):
+                        self.show_ads(query)
+    
+    def show_ads(self, query):
+        url = 'https://app.ablybot.com/api/airdrop/ad_shown'
+        headers = {
+            **self.headers,
+            'Authorization': f'Bearer {query}',
+        }
+        response = self.make_request('post', url=url, headers=headers)
+        if response is not None:
+            res = response.json()
+            ok = res.get('ok', False)
+            if ok:
+                self.print_("Add Show")
+                self.spin_wheel(query)
+    
+    def exchange(self, query, amount):
+        url = 'https://app.ablybot.com/api/airdrop/exchange'
+        headers = {
+            **self.headers,
+            'Authorization': f'Bearer {query}',
+        }
+        payload = {"amount":amount}
+        response = self.make_request('post', url=url, headers=headers, json=payload)
+        if response is not None:
+            res = response.json()
+            ok = res.get('ok', False)
+            if ok:
+                total_tokens = res.get('total_tokens', 0)
+                self.print_(f"Convert Done, {amount} ABLYs to {total_tokens} $ABLY")
+
+
 
         

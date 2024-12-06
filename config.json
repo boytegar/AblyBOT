@@ -1,4 +1,5 @@
 {
     "auto_spin": true,
-    "auto_task": true
+    "auto_task": true,
+    "auto_convert": true
 }
